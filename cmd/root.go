@@ -8,7 +8,9 @@ import (
 	"fmt"
 	"mackerel-speedtest/speedtest"
 	"os"
+	"time"
 
+	"github.com/mackerelio/mackerel-client-go"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -33,11 +35,42 @@ to quickly create a Cobra application.`,
 		if err := speedtest.Run(&result); err != nil {
 			return err
 		}
-		fmt.Printf("timestamp = %s\n", result.Timestamp)
-		fmt.Printf("ping.latency = %f ms\n", result.Ping.Latency)
-		fmt.Printf("ping.jitter = %f ms\n", result.Ping.Jitter)
-		fmt.Printf("download.bandwidth = %d bytes/s\n", result.Download.Bandwidth)
-		fmt.Printf("upload.bandwidth = %d bytes/s\n", result.Upload.Bandwidth)
+
+		time, err2 := time.Parse("2006-01-02T15:04:05Z", result.Timestamp)
+		if err2 != nil {
+			return err2
+		}
+		unixTimestamp := time.Unix()
+
+		fmt.Println("Posting metric values to Mackerel")
+		client := mackerel.NewClient("hoge")
+		err3 := client.PostServiceMetricValues("home-network", []*mackerel.MetricValue{
+			{
+				Name:  "speedtest.ping.latency",
+				Time:  unixTimestamp,
+				Value: result.Ping.Latency,
+			},
+			{
+				Name:  "speedtest.ping.jitter",
+				Time:  unixTimestamp,
+				Value: result.Ping.Jitter,
+			},
+			{
+				Name:  "speedtest.bandwidth.download",
+				Time:  unixTimestamp,
+				Value: result.Download.Bandwidth * 8,
+			},
+			{
+				Name:  "speedtest.bandwidth.upload",
+				Time:  unixTimestamp,
+				Value: result.Upload.Bandwidth * 8,
+			},
+		})
+		if err3 != nil {
+			return err3
+		}
+
+		fmt.Println("Complete!")
 		return nil
 	},
 }

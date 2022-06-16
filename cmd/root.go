@@ -6,6 +6,7 @@ package cmd
 
 import (
 	"fmt"
+	"mackerel-speedtest/speedtest"
 	"os"
 
 	"github.com/spf13/cobra"
@@ -26,7 +27,19 @@ This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	// Uncomment the following line if your bare application
 	// has an action associated with it:
-	// Run: func(cmd *cobra.Command, args []string) { },
+	RunE: func(cmd *cobra.Command, args []string) error {
+		fmt.Println("Executing speedtest cli")
+		var result speedtest.SpeedTestResult
+		if err := speedtest.Run(&result); err != nil {
+			return err
+		}
+		fmt.Printf("timestamp = %s\n", result.Timestamp)
+		fmt.Printf("ping.latency = %f ms\n", result.Ping.Latency)
+		fmt.Printf("ping.jitter = %f ms\n", result.Ping.Jitter)
+		fmt.Printf("download.bandwidth = %d bytes/s\n", result.Download.Bandwidth)
+		fmt.Printf("upload.bandwidth = %d bytes/s\n", result.Upload.Bandwidth)
+		return nil
+	},
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.

@@ -43,7 +43,7 @@ to quickly create a Cobra application.`,
 		unixTimestamp := time.Unix()
 
 		fmt.Println("Posting metric values to Mackerel")
-		client := mackerel.NewClient("hoge")
+		client := mackerel.NewClient(viper.GetString("apikey"))
 		err3 := client.PostServiceMetricValues("home-network", []*mackerel.MetricValue{
 			{
 				Name:  "speedtest.ping.latency",
@@ -91,7 +91,7 @@ func init() {
 	// Cobra supports persistent flags, which, if defined here,
 	// will be global for your application.
 
-	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.mackerel-speedtest.yaml)")
+	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.mackerel-speedtest.conf)")
 
 	// Cobra also supports local flags, which will only run
 	// when this action is called directly.
@@ -110,8 +110,8 @@ func initConfig() {
 
 		// Search config in home directory with name ".mackerel-speedtest" (without extension).
 		viper.AddConfigPath(home)
-		viper.SetConfigType("yaml")
-		viper.SetConfigName(".mackerel-speedtest")
+		viper.SetConfigType("toml")
+		viper.SetConfigName(".mackerel-speedtest.conf")
 	}
 
 	viper.AutomaticEnv() // read in environment variables that match

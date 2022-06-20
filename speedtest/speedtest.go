@@ -3,51 +3,18 @@ package speedtest
 import (
 	"encoding/json"
 	"os/exec"
+	"time"
+
+	"github.com/showwin/speedtest-go/speedtest"
 )
 
 type SpeedTestResult struct {
-	Type      string
-	Timestamp string
-	Ping      struct {
-		Jitter  float64
-		Latency float64
-	}
-	Download struct {
-		Bandwidth uint64
-		Bytes     uint64
-		Elapsed   uint64
-	}
-	Upload struct {
-		Bandwidth uint64
-		Bytes     uint64
-		Elapsed   uint64
-	}
-	PacketLoss float64
-	Isp        string
-	Interface  struct {
-		InternalIp string
-		Name       string
-		MacAddr    string
-		IsVpn      bool
-		ExternalIp string
-	}
-	Server struct {
-		Id       uint64
-		Host     string
-		Port     uint64
-		Name     string
-		Location string
-		Country  string
-		Ip       string
-	}
-	Result struct {
-		Id        string
-		Url       string
-		Persisted bool
-	}
+	Latency time.Duration
+	DLSpeed float64
+	ULSpeed float64
 }
 
-func Run(result *SpeedTestResult) error {
+func Run_(result *SpeedTestResult) error {
 	speedtestCmd := exec.Command("speedtest", "--server-id=21569", "--format=json")
 	out, err := speedtestCmd.Output()
 	if err != nil {
@@ -57,5 +24,34 @@ func Run(result *SpeedTestResult) error {
 	if err2 != nil {
 		return err2
 	}
+	return nil
+}
+
+func Run(result *SpeedTestResult) error {
+	user, err := speedtest.FetchUserInfo()
+	if err != nil {
+		return err
+	}
+
+	serverList, _ := speedtest.FetchServers(user)
+	if err != nil {
+		return err
+	}
+
+	targets, err := serverList.FindServer([]int{21569})
+	if err != nil {
+		return err
+	}
+
+	for _, s := range targets {
+		s.PingTest()
+		s.DownloadTest(false)
+		s.UploadTest(false)
+
+		result.Latency = s.Latency
+		result.DLSpeed = s.DLSpeed
+		result.ULSpeed = s.ULSpeed
+	}
+
 	return nil
 }

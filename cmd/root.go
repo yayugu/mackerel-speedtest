@@ -36,30 +36,38 @@ to quickly create a Cobra application.`,
 			return err
 		}
 
-		now := time.Now()
-		unixTimestamp := now.Unix()
+		time, err2 := time.Parse("2006-01-02T15:04:05Z", result.Timestamp)
+		if err2 != nil {
+			return err2
+		}
+		unixTimestamp := time.Unix()
 
 		fmt.Println("Posting metric values to Mackerel")
 		client := mackerel.NewClient(viper.GetString("apikey"))
-		err2 := client.PostServiceMetricValues("home-network", []*mackerel.MetricValue{
+		err3 := client.PostServiceMetricValues("home-network", []*mackerel.MetricValue{
 			{
-				Name:  "internet-speed.ping.latency",
+				Name:  "speedtest.ping.latency",
 				Time:  unixTimestamp,
-				Value: result.Latency.Seconds() * 1000,
+				Value: result.Ping.Latency,
 			},
 			{
-				Name:  "internet-speed.bandwidth.download",
+				Name:  "speedtest.ping.jitter",
 				Time:  unixTimestamp,
-				Value: result.DLSpeed * 1024 * 1024,
+				Value: result.Ping.Jitter,
 			},
 			{
-				Name:  "internet-speed.bandwidth.upload",
+				Name:  "speedtest.bandwidth.download",
 				Time:  unixTimestamp,
-				Value: result.ULSpeed * 1024 * 1024,
+				Value: result.Download.Bandwidth * 8,
+			},
+			{
+				Name:  "speedtest.bandwidth.upload",
+				Time:  unixTimestamp,
+				Value: result.Upload.Bandwidth * 8,
 			},
 		})
-		if err2 != nil {
-			return err2
+		if err3 != nil {
+			return err3
 		}
 
 		fmt.Println("Complete!")

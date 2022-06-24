@@ -47,8 +47,8 @@ type SpeedTestResult struct {
 	}
 }
 
-func Run(result *SpeedTestResult) error {
-	speedtestCmd := exec.Command("speedtest", "--server-id=21569", "--format=json")
+func Run(speedtestPath string, result *SpeedTestResult) error {
+	speedtestCmd := exec.Command(speedtestPath, "--server-id=21569", "--format=json")
 	out, err := speedtestCmd.Output()
 	if err != nil {
 		return err

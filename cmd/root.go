@@ -32,7 +32,7 @@ to quickly create a Cobra application.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		fmt.Println("Executing speedtest cli")
 		var result speedtest.SpeedTestResult
-		if err := speedtest.Run(&result); err != nil {
+		if err := speedtest.Run(viper.GetString("speedtest_path"), &result); err != nil {
 			return err
 		}
 
@@ -44,7 +44,7 @@ to quickly create a Cobra application.`,
 
 		fmt.Println("Posting metric values to Mackerel")
 		client := mackerel.NewClient(viper.GetString("apikey"))
-		err3 := client.PostServiceMetricValues("home-network", []*mackerel.MetricValue{
+		err3 := client.PostServiceMetricValues("home-network-test", []*mackerel.MetricValue{
 			{
 				Name:  "speedtest.ping.latency",
 				Time:  unixTimestamp,

@@ -6,11 +6,10 @@ package cmd
 
 import (
 	"fmt"
-	"mackerel-speedtest/speedtest"
+	"mackerel-speedtest/internal/mackerel"
+	"mackerel-speedtest/internal/speedtest"
 	"os"
-	"time"
 
-	"github.com/mackerelio/mackerel-client-go"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -27,47 +26,24 @@ to Mackerel as service metrics.
 	// Uncomment the following line if your bare application
 	// has an action associated with it:
 	RunE: func(cmd *cobra.Command, args []string) error {
-		fmt.Println("Executing speedtest cli")
-		var result speedtest.SpeedTestResult
-		if err := speedtest.Run(viper.GetString("speedtest_path"), &result); err != nil {
+		s := speedtest.SpeedTest{
+			Path:     viper.GetString("speedtest_path"),
+			ServerId: viper.GetUint64("speedtest_server_id"),
+		}
+		if err := s.IsInstalled(); err != nil {
 			return err
 		}
 
-		time, err2 := time.Parse("2006-01-02T15:04:05Z", result.Timestamp)
-		if err2 != nil {
-			return err2
+		fmt.Println("Executing speedtest cli")
+		if err := s.Run(); err != nil {
+			return err
 		}
-		unixTimestamp := time.Unix()
 
 		fmt.Println("Posting metric values to Mackerel")
-		client := mackerel.NewClient(viper.GetString("apikey"))
-		err3 := client.PostServiceMetricValues("home-network-test", []*mackerel.MetricValue{
-			{
-				Name:  "speedtest.ping.latency",
-				Time:  unixTimestamp,
-				Value: result.Ping.Latency,
-			},
-			{
-				Name:  "speedtest.ping.jitter",
-				Time:  unixTimestamp,
-				Value: result.Ping.Jitter,
-			},
-			{
-				Name:  "speedtest.bandwidth.download",
-				Time:  unixTimestamp,
-				Value: result.Download.Bandwidth * 8,
-			},
-			{
-				Name:  "speedtest.bandwidth.upload",
-				Time:  unixTimestamp,
-				Value: result.Upload.Bandwidth * 8,
-			},
-		})
-		if err3 != nil {
-			return err3
-		}
-
+		m := mackerel.NewMackerelClient(viper.GetString("apikey"), viper.GetString("service_name"))
+		m.PostSpeedtestMetric(s.Result)
 		fmt.Println("Complete!")
+
 		return nil
 	},
 }

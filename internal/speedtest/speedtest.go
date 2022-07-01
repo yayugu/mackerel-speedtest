@@ -2,10 +2,18 @@ package speedtest
 
 import (
 	"encoding/json"
+	"fmt"
 	"os/exec"
+	"strings"
 )
 
-type SpeedTestResult struct {
+type SpeedTest struct {
+	Path     string
+	ServerId uint64
+	Result
+}
+
+type Result struct {
 	Type      string
 	Timestamp string
 	Ping      struct {
@@ -47,13 +55,25 @@ type SpeedTestResult struct {
 	}
 }
 
-func Run(speedtestPath string, result *SpeedTestResult) error {
-	speedtestCmd := exec.Command(speedtestPath, "--server-id=21569", "--format=json")
+func (s *SpeedTest) IsInstalled() error {
+	speedtestCmd := exec.Command(s.Path, "--version")
 	out, err := speedtestCmd.Output()
 	if err != nil {
 		return err
 	}
-	err2 := json.Unmarshal(out, &result)
+	if !strings.Contains(string(out), "Speedtest by Ookla") {
+		return fmt.Errorf("%s is not an official speedtest CLI provided by Ookla", s.Path)
+	}
+	return nil
+}
+
+func (s *SpeedTest) Run() error {
+	speedtestCmd := exec.Command(s.Path, fmt.Sprintf("--server-id=%d", s.ServerId), "--format=json")
+	out, err := speedtestCmd.Output()
+	if err != nil {
+		return err
+	}
+	err2 := json.Unmarshal(out, &s.Result)
 	if err2 != nil {
 		return err2
 	}

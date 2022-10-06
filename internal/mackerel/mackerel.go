@@ -30,12 +30,12 @@ func (m *MackerelClient) PostSpeedtestMetric(result speedtest.Result) error {
 		{
 			Name:  "speedtest.ping.latency",
 			Time:  unixTimestamp,
-			Value: result.Ping.Latency / 1000, // ms -> s
+			Value: result.Ping.Latency, // ms
 		},
 		{
 			Name:  "speedtest.ping.jitter",
 			Time:  unixTimestamp,
-			Value: result.Ping.Jitter / 1000, // ms -> s
+			Value: result.Ping.Jitter, // ms
 		},
 		{
 			Name:  "speedtest.bandwidth.download",

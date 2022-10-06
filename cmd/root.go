@@ -73,6 +73,7 @@ func init() {
 
 // initConfig reads in config file and ENV variables if set.
 func initConfig() {
+	viper.SetConfigType("toml")
 	if cfgFile != "" {
 		// Use config file from the flag.
 		viper.SetConfigFile(cfgFile)
@@ -83,7 +84,6 @@ func initConfig() {
 
 		// Search config in home directory with name ".mackerel-speedtest" (without extension).
 		viper.AddConfigPath(home)
-		viper.SetConfigType("toml")
 		viper.SetConfigName(".mackerel-speedtest.conf")
 	}
 

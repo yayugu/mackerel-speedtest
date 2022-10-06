@@ -47,6 +47,11 @@ func (m *MackerelClient) PostSpeedtestMetric(result speedtest.Result) error {
 			Time:  unixTimestamp,
 			Value: result.Upload.Bandwidth * 8, // bytes/s -> bps
 		},
+		{
+			Name:  "speedtest.packetloss.packetloss",
+			Time:  unixTimestamp,
+			Value: result.PacketLoss, // bytes/s -> bps
+		},
 	})
 	return err2
 }
@@ -77,6 +82,16 @@ func (m *MackerelClient) CreateGraphDefs() error {
 				},
 				{
 					Name:      "speedtest.bandwidth.upload",
+					IsStacked: false,
+				},
+			},
+		},
+		{
+			Name: "speedtest.packetloss",
+			Unit: "percentage",
+			Metrics: []*mackerel.GraphDefsMetric{
+				{
+					Name:      "speedtest.packetloss.packetloss",
 					IsStacked: false,
 				},
 			},
